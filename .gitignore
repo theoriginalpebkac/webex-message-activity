@@ -1,0 +1,20 @@
+# Secrets and personal config — never commit
+credentials.txt
+settings.yaml
+
+# Fetched chat data (contains other people's messages)
+data/
+
+# Generated reports (contain real message text — internal info, secrets, etc.)
+webex-summary-*.txt
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Claude Code local working files (not meant for the repo)
+.claude/settings.local.json
+
+# macOS
+.DS_Store

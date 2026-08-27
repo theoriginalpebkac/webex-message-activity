@@ -1,0 +1,5 @@
+requests>=2.28
+PyYAML>=6.0
+# Optional: only needed if your OS lacks a system IANA timezone database
+# (uncommon on macOS/Linux). Uncomment if you hit ZoneInfoNotFoundError.
+# tzdata>=2024.1

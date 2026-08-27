@@ -1,0 +1,17 @@
+# Copy this file to settings.yaml and fill in your values.
+# settings.yaml is gitignored.
+
+# The email address you post under in Webex. Used to identify YOUR messages.
+email: you@example.com
+
+# Your local IANA timezone. Messages are bucketed into calendar days using this
+# zone, so getting it right keeps late-evening work on the correct day.
+timezone: America/New_York
+
+# Report: max characters shown per message before truncation (with a
+# "… (+N more chars)" indicator). Raise to see more of long pasted content.
+message_char_limit: 500
+
+# Report: start a new session when the gap between two of your consecutive
+# messages in a space exceeds this many minutes.
+session_gap_minutes: 90
