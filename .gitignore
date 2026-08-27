@@ -6,7 +6,8 @@ settings.yaml
 data/
 
 # Generated reports (contain real message text — internal info, secrets, etc.)
-webex-summary-*.txt
+# Prefix glob covers any format/extension: .txt, .html, asset dirs, etc.
+webex-summary-*
 
 # Python
 venv/
