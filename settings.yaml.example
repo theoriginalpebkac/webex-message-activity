@@ -10,7 +10,7 @@ timezone: America/New_York
 
 # Report: max characters shown per message before truncation (with a
 # "… (+N more chars)" indicator). Raise to see more of long pasted content.
-message_char_limit: 500
+textformat_message_char_limit: 500
 
 # Report: start a new session when the gap between two of your consecutive
 # messages in a space exceeds this many minutes.

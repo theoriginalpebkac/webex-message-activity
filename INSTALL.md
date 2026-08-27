@@ -77,7 +77,7 @@ Edit **`settings.yaml`**:
 ```yaml
 email: you@example.com          # the address you post under in Webex
 timezone: America/New_York      # your IANA timezone
-message_char_limit: 500         # max chars shown per message in the report
+textformat_message_char_limit: 500   # max chars per message in the --text report (HTML shows full)
 session_gap_minutes: 90         # gap (minutes) that starts a new session
 ```
 
@@ -104,12 +104,14 @@ authentication failure clearly if the token has expired.
 ./venv/bin/python report.py
 ```
 
-This produces `webex-summary-<month>.txt` in the project directory. To target a
-specific period instead of the current month:
+This produces `webex-summary-<month>.html` in the project directory — open it in
+a browser to review one week at a time. Add `--text` for a plain `.txt` report.
+To target a specific period instead of the current month:
 
 ```bash
 ./venv/bin/python fetcher.py --month 2026-08
 ./venv/bin/python report.py  --month 2026-08
+./venv/bin/python report.py  --month 2026-08 --text   # plain-text instead of HTML
 ```
 
 See [README.md](README.md) for what the tool does and how the data is structured.
