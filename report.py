@@ -27,6 +27,7 @@ import sys
 import glob
 import json
 import html
+import zlib
 import argparse
 from datetime import datetime, timedelta, date
 from zoneinfo import ZoneInfo
@@ -316,6 +317,10 @@ HTML_CSS = """
   --badge-group-ink: #545a61;
   --badge-direct-bg: #e5f2ec;
   --badge-direct-ink: #1f6b4a;
+  --sp-0: #c2410c; --sp-1: #b45309; --sp-2: #8a6d00; --sp-3: #4d7c0f;
+  --sp-4: #15803d; --sp-5: #0f766e; --sp-6: #0e7490; --sp-7: #4f5bd5;
+  --sp-8: #7c3aed; --sp-9: #a21caf; --sp-10: #be185d; --sp-11: #8a5a2b;
+  --sp-other: #5b6b7d;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -336,6 +341,10 @@ HTML_CSS = """
     --badge-group-ink: #a8afb7;
     --badge-direct-bg: #1a2e26;
     --badge-direct-ink: #7fc9a5;
+    --sp-0: #ff8f73; --sp-1: #f5a54a; --sp-2: #e3c84a; --sp-3: #a8d45a;
+    --sp-4: #5fd08a; --sp-5: #3fd0c0; --sp-6: #4fc3f0; --sp-7: #8f9bff;
+    --sp-8: #b08cff; --sp-9: #e07fe0; --sp-10: #ff85b0; --sp-11: #c9a57a;
+    --sp-other: #9fb0c3;
   }
 }
 * { box-sizing: border-box; }
@@ -446,7 +455,7 @@ td.date {
   border-right: 1px solid var(--line);
   white-space: nowrap;
 }
-td.date .dow { display: block; font-weight: 700; font-size: 17.5px; letter-spacing: -0.01em; }
+td.date .dow { display: block; color: var(--accent); font-weight: 700; font-size: 17.5px; letter-spacing: -0.01em; }
 td.date .dnum { color: var(--ink-soft); font-size: 12.5px; }
 /* new-day rows get a heavier full-width rule and extra breathing room above */
 tr.day-start td { border-top: 3px solid var(--day-rule); padding-top: 16px; }
@@ -471,7 +480,7 @@ td.msgs { width: auto; }
   gap: 8px;
   margin-bottom: 9px;
 }
-.space .title { font-weight: 650; font-size: 19px; }
+.space .title { font-weight: 650; font-size: 19px; color: var(--sp-other); }
 .badge {
   flex: none;
   font-size: 10.5px;
@@ -645,7 +654,32 @@ def _session_span(sess: dict) -> str:
     return f'{_esc(fmt_time(sess["start"]))}–{_esc(fmt_time(sess["end"]))}'
 
 
-def _html_week(week: dict) -> str:
+SPACE_HUES = 12  # number of --sp-N variables in HTML_CSS
+
+
+def _space_hues(weeks: list) -> dict:
+    """Map the busiest spaces to their own hue; the long tail shares --sp-other.
+
+    Each title prefers a slot hashed from its name, so a space tends to keep
+    its color from one report to the next.
+    """
+    counts = {}
+    for w in weeks:
+        for d in w["days"]:
+            for sp in d["spaces"]:
+                counts[sp["title"]] = counts.get(sp["title"], 0) + len(sp["sessions"])
+    hues = {}
+    taken = set()
+    for title in sorted(counts, key=lambda t: (-counts[t], t))[:SPACE_HUES]:
+        slot = zlib.crc32(title.encode("utf-8")) % SPACE_HUES
+        while slot in taken:
+            slot = (slot + 1) % SPACE_HUES
+        taken.add(slot)
+        hues[title] = slot
+    return hues
+
+
+def _html_week(week: dict, hues: dict) -> str:
     """One week's activity table plus a small summary line."""
     days = week["days"]
     n_days = len(days)
@@ -672,7 +706,9 @@ def _html_week(week: dict) -> str:
                 f'<td class="time"><span class="span">{_session_span(sess)}</span>'
                 f'<span class="count">{n} msg{"s" if n != 1 else ""}</span></td>')
 
-            body = [f'<div class="space"><span class="title">{_esc(space["title"])}</span>'
+            hue = hues.get(space["title"])
+            style = f' style="color:var(--sp-{hue})"' if hue is not None else ""
+            body = [f'<div class="space"><span class="title"{style}>{_esc(space["title"])}</span>'
                     f'{_badge(space["type"])}</div>']
             for item in sess["items"]:
                 if item["kind"] == "context":
@@ -725,7 +761,8 @@ def render_html(weeks: list, period: str, settings: dict, generated: datetime) -
             '<span class="spacer"></span>'
             '<button id="toggleAll" class="toggle-all">View all weeks on one page</button>'
             '</nav>')
-        weeks_html = "".join(_html_week(w) for w in weeks)
+        hues = _space_hues(weeks)
+        weeks_html = "".join(_html_week(w, hues) for w in weeks)
         body = nav + weeks_html
     else:
         body = '<p class="empty">No activity found for this period.</p>'
